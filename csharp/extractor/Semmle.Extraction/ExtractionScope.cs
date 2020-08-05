@@ -46,6 +46,8 @@ namespace Semmle.Extraction
 
         public bool IsGlobalScope { get; }
 
+        public bool AddAssemblyTrapPrefix { get; private set; }
+
         public bool InFileScope(string path) => path == filepath;
 
         public bool InScope(ISymbol symbol) =>
@@ -68,6 +70,8 @@ namespace Semmle.Extraction
         }
 
         public bool IsGlobalScope => false;
+
+        public bool AddAssemblyTrapPrefix { get; private set; }
 
         public bool InFileScope(string path) => path == sourceTree.FilePath;
 

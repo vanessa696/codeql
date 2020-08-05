@@ -232,13 +232,19 @@ class MultiImplementationsParent extends ExprOrStmtParent {
     )
   }
 
+  /** Gets the best location of this element. */
+  Location getBestLocation() {
+    result = this.getALocation() and
+    result.getFile() = this.getBestFile()
+  }
+
   /**
    * Gets the i`th child of this element. Only the "best" child among all the possible
    * run-time implementations is returned, namely the child considered most likely to
    * be the actual run-time implementation.
    */
   ControlFlowElement getBestChild(int i) {
-    exists(File f, ValueOrRefType t | f = getBestFile() |
+    exists(File f, ValueOrRefType t | f = this.getBestFile() |
       f = this.getAnImplementationInTopLevelType(i, result, t)
     )
   }
@@ -319,20 +325,6 @@ private int getImplementationSize(ValueOrRefType t, File f) {
   else result = getImplementationSize1(t, f)
 }
 
-/**
- * Holds if declaration `d` should have a location in file `f`, because it is part of a
- * type with multiple implementations, where the most likely run-time implementation is
- * in `f`.
- */
-private predicate mustHaveLocationInFile(Declaration d, File f) {
-  exists(MultiImplementationsParent p, ValueOrRefType t |
-    t = getTopLevelDeclaringType(p) and
-    f = p.getBestFile()
-  |
-    t = getTopLevelDeclaringType(d) or d = t or d = p
-  )
-}
-
 private predicate hasNoSourceLocation(Element e) { not e.getALocation() instanceof SourceLocation }
 
 cached
@@ -347,8 +339,10 @@ private module Cached {
 
   cached
   Location bestLocation(Element e) {
-    result = e.getALocation().(SourceLocation) and
-    (mustHaveLocationInFile(e, _) implies mustHaveLocationInFile(e, result.getFile()))
+    result = e.(MultiImplementationsParent).getBestLocation()
+    or
+    not e instanceof MultiImplementationsParent and
+    result = e.getALocation().(SourceLocation)
     or
     hasNoSourceLocation(e) and
     result = min(Location l | l = e.getALocation() | l order by l.getFile().toString())
